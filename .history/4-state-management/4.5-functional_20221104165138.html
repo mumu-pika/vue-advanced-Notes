@@ -1,0 +1,58 @@
+<script src="../node_modules/vue/dist/vue.js"></script>
+
+<div id="app"></div>
+
+<script>
+  /* 
+    Redux中的核心概念为reducer
+    reducer接收旧的状态和action, 并返回一个全新的state 副本
+    基于preState这个旧状态, 通过actionType处理返回基于preState的状态对象
+
+    非常实用, 在于它接收一些参数然后返回时候没有改变任何东西（因为是处理更新后的副本）
+  */
+  // reducer
+  // const reducer = (preState, actionType) => {
+  //   switch (actionType) {
+  //     case 'inc':
+  //       return { count: preState.count + 1 }
+  //     case 'dec':
+  //       return { count: preState.count - 1 }
+  //     default:
+  //       return preState
+  //   }
+  // }
+
+  function app({ el, model, view, actions }) {
+    // Implement this!
+    new Vue({
+      
+    })
+
+
+
+  }
+
+  // voila
+  app({
+    el: '#app',
+    model: {
+      count: 0
+    },
+    actions: {
+      inc: ({ count }) => ({ count: count + 1 }),
+      dec: ({ count }) => ({ count: count - 1 })
+    },
+
+    /* 
+      model和actions都被传递到渲染函数h中
+      当我们需要状态的时候, 我们可以通过model来读取
+      当我们需要改变一些状态的时候, 我们可以去触发action中方法
+    
+    */
+    view: (h, model, actions) => h('div', [
+      model.count, ' ',
+      h('button', { on: { click: actions.inc } }, '+'),
+      h('button', { on: { click: actions.dec } }, '-')
+    ])
+  })
+</script>

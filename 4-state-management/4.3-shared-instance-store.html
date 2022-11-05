@@ -1,6 +1,6 @@
 <script src="../node_modules/vue/dist/vue.js"></script>
 
-<div>
+<div id="app">
   <counter></counter>
   <counter></counter>
   <counter></counter>
@@ -10,16 +10,41 @@
 <script>
 // copy and modify the first exercise to use a Vue instance as
 // a shared store instead.
+// state由vue处理， vue实例默认具有响应式
+// 我们可以将这里的state更名为store、userStore、productStore、他们每个都只处理特定的逻辑或应用
 const state = new Vue({
   // Implement this!
+  data: {
+    count: 0
+  },
+  // 我们有它的状态，还可以在同一个地方改变状态
+  methods: {
+    inc(){
+      // this is where the mutation happens, mutation and action should be synchronous
+      this.count++
+    }
+  }
 })
 
 const Counter = {
   // Implement this!
+  // 由于状态对象本身是响应性的，我们可以直接在其他组件引用
+  // 也就是我们这里可以直接引用state这个Vue实例状态对象
+  render: h => h('div', state.count)
 }
 
 new Vue({
   el: '#app',
   // Implement this!
+  components: {
+    Counter
+  },
+  // 我们仍然需要以代理的方式调用inc函数
+  // 我们现在直接操作状态，在这里直接调用一个函数
+  methods:{
+    inc(){
+      state.inc()
+    }
+  }
 })
 </script>

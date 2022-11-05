@@ -3,9 +3,33 @@
 // exposing it on window is necessary for testing
 window.Dep = class Dep {
   // Implement this!
+  constructor(){
+    this.subscribers = new Set()
+  }
+  // listen
+  depend(){
+    // 如果有更新的函数，添加依赖项中
+    if(activeUpdate){
+      this.subscribers.add(activeUpdate)
+      // register the current active update as a subscriber
+    }
+  }
+  // trigger
+  notify(){
+    // run all subscriber functions
+    this.subscribers.forEach(sub => sub())
+  }
 }
+
+let activeUpdate
 
 function autorun (update) {
   // Implement this!
+  function wrappedUpdate(){
+    activeUpdate = wrappedUpdate
+    update()
+    activeUpdate = null
+  }
+  wrappedUpdate()
 }
 </script>

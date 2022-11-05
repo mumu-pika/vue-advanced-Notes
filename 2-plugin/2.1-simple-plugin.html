@@ -3,7 +3,48 @@
 <script>
 const RulesPlugin = {
   // Implement this!
+  // 当我们调用Vue.use(RulesPlugin)时，instalL就会被执行
+  install(Vue){
+    Vue.mixin({
+      // 我们使用全局mixin, 它会install a created hook 到我们的组件中
+      // 然后check for rules(验证规则)
+      // created hook
+      created(){
+        if (this.$options.rules) {
+          // we can do something
+          Object.keys(this.$options.rules).forEach(key => {
+            // 获取每一个rule对象中每一个属性
+            const rule = this.$options.rules[key]
+            // 对属性进行watch操作
+            // call a callback whenever this watch property changes
+            // 监听属性变化，当变化时执行回调
+            this.$watch(key, newValue => {
+              // rule.validate会返回一个boolean值，我们用result来接收一下
+              const result = rule.validate(newValue)
+              // 如果验证失败，在控制台打印message
+              if(!result) console.log(rule.message)
+            })
+          })
+        }
+      }
+    })
+  }
 }
 
 Vue.use(RulesPlugin)
+
+const vm = new Vue({
+  data: { foo: 10 },
+  rules: {
+    foo: {
+      validate: value => value > 1,
+      message: 'foo must be greater than one' // 规则定为foo这个值需要比1大
+    }
+  }
+})
+
+vm.foo = 0 // should log: "foo must be greater than one"
+
+
+
 </script>

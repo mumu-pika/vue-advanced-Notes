@@ -8,11 +8,21 @@
 </div>
 
 <script>
-// requirement: a counter component rendered 3 times
-// the component takes the current count via props
-// and a button that increments all 3 counters at once
-new Vue({
-  el: '#app',
-  // Implement this!
-})
+  // requirement: a counter component rendered 3 times
+  // the component takes the current count via props
+  // and a button that increments all 3 counters at once
+  new Vue({
+    el: '#app',
+    // Implement this!
+    data: {
+      count: 0
+    },
+    // create an inline component counter
+    components: {
+      Counter: {
+        props: ['count'],
+        template: `<div>{{ count }}</div>`
+      }
+    }
+  })
 </script>

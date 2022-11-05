@@ -1,13 +1,52 @@
 <script src="../node_modules/vue/dist/vue.js"></script>
 
 <div id="app">
-  <example :tags="['h1', 'h2', 'h3']"></example>
+  <!-- tags是一个数组，里面有h1,h2,h3这些标签名称 -->
+  <example :tags="['h1', 'h2', 'h3']">
+    <!-- slot -->
+    <div><footer></footer></div>
+  </example>
 </div>
 
 <script>
+
 Vue.component('example', {
   // Implement this!
+  props: ['tags'],
+  functional: true, // 我们只需要添加functional为true, 就可以将这个组件转为函数组件
+  // render (h) {
+  //   // 我们需要一个div包裹
+  //   // 我们的tag标签是动态的，我们并不知道这个数组（h的第三个参数）有多长（会变化），因而我们必须动态构造元素
+  //   // 我们通过map迭代，需要为每个标签(子代)创建一个虚拟节点，所以这里需要调用h并返回， 这里i是index,题目要求标签中需要显示index索引
+  //   // const children = this.tags.map((tag, i) => h(tag, i))
+  //   return h('div', {attrs: { id: 'hello'}} , this.tags.map((tag, i) => h(tag,i))
+  // }
+
+  // 对于函数组件，我们这里无法使用到this, 我们需要用到context
+  // render(h, context){
+  //   // 因为是通过slot传值，所以我们可以用相同slot名字或者slot Api访问
+  //   // context.slots() // this.$slots
+  //   return h('div', context.props.tags.map((tag, i) => h(tag, i)))
+  // }
+
+  // 下面有个更简洁的写法，使用解构赋值， render（h, context） context为函数渲染上下文
+  render(h, { props: { tags }}){
+    // 因为是通过slot传值，所以我们可以用相同slot名字或者slot Api访问
+    // context.slots() // this.$slots
+    return h('div', tags.map((tag, i) => h(tag, i)))
+  }
 })
+
+// JSX 写法
+// const Example = {
+//   functional: true,
+//   render (h, { props: { tags }}) {
+//     return <div>{tags.map((tag, i) => h(tag, i))}</div>
+//   }
+// }
+
+// JSX 写法 写成一行
+// const Example = (h, { props: { tags }}) => <div>{tags.map((tag, i) => h(tag, i))}</div>
 
 new Vue({ el: '#app' })
 </script>

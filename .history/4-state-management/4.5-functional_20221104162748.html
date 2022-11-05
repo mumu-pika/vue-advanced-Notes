@@ -1,0 +1,43 @@
+<script src="../node_modules/vue/dist/vue.js"></script>
+
+<div id="app"></div>
+
+<script>
+  /* 
+    Redux中的核心概念为reducer
+  */
+  // reducer
+  const reducer = (preState, actionType) => {
+    switch (actionType) {
+      case 'inc':
+        return { count: preState.count + 1 }
+      case 'dec':
+        return { count: preState.count - 1 }
+    }
+  }
+
+  function app({ el, model, view, actions }) {
+    // Implement this!
+
+
+
+
+  }
+
+  // voila
+  app({
+    el: '#app',
+    model: {
+      count: 0
+    },
+    actions: {
+      inc: ({ count }) => ({ count: count + 1 }),
+      dec: ({ count }) => ({ count: count - 1 })
+    },
+    view: (h, model, actions) => h('div', [
+      model.count, ' ',
+      h('button', { on: { click: actions.inc } }, '+'),
+      h('button', { on: { click: actions.dec } }, '-')
+    ])
+  })
+</script>
