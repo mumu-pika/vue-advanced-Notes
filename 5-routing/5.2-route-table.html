@@ -7,24 +7,57 @@
 </div>
 
 <script>
-// '#/foo' -> Foo
-// '#/bar' -> Bar
-// '#/404' -> NotFound
+  // '#/foo' -> Foo
+  // '#/bar' -> Bar
+  // '#/404' -> NotFound
 
-const Foo = { template: `<div>foo</div>` }
-const Bar = { template: `<div>bar</div>` }
-const NotFound = { template: `<div>not found!</div>` }
+  const Foo = { template: `<div>foo</div>` }
+  const Bar = { template: `<div>bar</div>` }
+  const NotFound = { template: `<div>not found!</div>` }
 
-const routeTable = {
-  // Implement this!
-}
+  /* 
+    组件和路径的对应关系通过路由表控制
+  */
+  const routeTable = {
+    // Implement this!
+    'foo': Foo,
+    'bar': Bar
 
-window.addEventListener('hashchange', () => {
-  // Implement this!
-})
+  }
 
-const app = new Vue({
-  el: '#app',
-  // Implement this!
-})
+  window.addEventListener('hashchange', () => {
+    // Implement this!
+    app.url = window.location.hash.slice(1)
+  })
+
+  /* 
+    通常我们期望的url所代表的含义
+    '/user/username'
+    '/user/123?foo=bar'
+    {
+      path: '/user/123'
+      params: { username: '123' },
+      query: { foo: 'bar' }
+    }
+  */
+
+  const app = new Vue({
+    el: '#app',
+    // Implement this!
+    data: {
+      url: window.location.hash.slice(1)
+    },
+
+    // render function
+    render(h) {
+      return h('div', [
+        h(routeTable[this.url] || NotFound),
+        // 使用渲染函数的时候, 在foo与bar之间没有空格节点
+        // 所以这里如果需要在foo与bar添加空格节点, 可以手动添加或是利用css样式来处理
+        h('a', { attr: { href: '#foo' } }, 'foo'),
+        " ",
+        h('a', { attr: { href: '#bar' } }, 'bar')
+      ])
+    }
+  })
 </script>
