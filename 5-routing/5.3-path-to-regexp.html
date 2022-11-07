@@ -4,53 +4,97 @@
 <div id="app"></div>
 
 <script>
-// '#/foo/123' -> foo with id: 123
-// '#/bar' -> Bar
-// '#/404' -> NotFound
+  // const keys = []
+  // const regex = pathToRegexp('foo/:bar', keys)
 
-// path-to-regexp usage:
-// const regex = pathToRegexp(pattern)
-// const match = regex.exec(path)
-// const params = regex.keys.reduce((params, key, index) => {
-//   params[key] = match[index + 1]
-// }, {})
+  // const result = regex.exec('/foo/123') // ['/foo/123', '123']
 
-const Foo = {
-  props: ['id'],
-  template: `<div>foo with id: {{ id }}</div>`
-}
-const Bar = { template: `<div>bar</div>` }
-const NotFound = { template: `<div>not found!</div>` }
+  // keys : [{name: 'bar'} , ...]
 
-const routeTable = {
-  // Implement this!
-}
+  // '#/foo/123' -> foo with id: 123
+  // '#/bar' -> Bar
+  // '#/404' -> NotFound
 
-window.addEventListener('hashchange', () => {
-  // Implement this!
-})
+  // path-to-regexp usage:
+  // const regex = pathToRegexp(pattern)
+  // const match = regex.exec(path)
+  // const params = regex.keys.reduce((params, key, index) => {
+  //   params[key] = match[index + 1]
+  // }, {})
 
-const app = new Vue({
-  el: '#app',
-  data: {
-    url: window.location.hash.slice(1)
-  },
-  render (h) {
-    const path = '/' + this.url
-
-    let componentToRender
-    let props = {}
-
-    // Implement the logic to figure out proper values
-    // for componentToRender and props
-
-    return h('div', [
-      h(componentToRender, { props }),
-      h('a', { attrs: { href: '#foo/123' }}, 'foo'),
-      h('a', { attrs: { href: '#foo/234' }}, 'foo'),
-      ' | ',
-      h('a', { attrs: { href: '#bar' }}, 'bar')
-    ])
+  const Foo = {
+    props: ['id'],
+    template: `<div>foo with id: {{ id }}</div>`
   }
-})
+  const Bar = { template: `<div>bar</div>` }
+  const NotFound = { template: `<div>not found!</div>` }
+
+  const routeTable = {
+    // Implement this!
+    'foo': Foo,
+    'bar': Bar
+  }
+
+
+  // 在这里进行预编译, 而不是在render 函数中
+  const compiledRouteTable = [] // create an array to contain our route entries
+  Object.keys(routeTable).forEach(path => {
+    const dynamicSegments = [] // 我们需要keys数组去记录动态参数 dynamicSegments
+    const regex = pathToRegexp(path, keys) // 调用pathToRegexp库
+    const component = routeTable[path] // 需要渲染的组件
+    compiledRouteTable.push({
+      component,
+      regex,
+      dynamicSegments
+    })
+  })
+
+
+  window.addEventListener('hashchange', () => {
+    // Implement this!
+  })
+
+  const app = new Vue({
+    el: '#app',
+    data: {
+      url: window.location.hash.slice(1)
+    },
+    render(h) {
+      const path = '/' + this.url
+
+      let componentToRender // 匹配需要渲染的组件
+      let props = {}
+
+      // Implement the logic to figure out proper values
+      // for componentToRender and props
+      // 在这里迭代compiledRouteTable
+      // 这里使用some, 一旦找到匹配就会终止迭代, terminate the iteration
+      compiledRouteTable.some(route => {
+        const match = route.regex.exec(path)
+        if (match) {
+          componentToRender = route.component
+          // 获取到url中param参数
+          // const params = route.keys.reduce((params, key, index) => {
+          //   // index + 1 是因为match的第一个参数是匹配到的完全匹配的路径
+          //   // 依次将match中拆分开来的params传入params中
+          //   params[key] = match[index + 1]
+          // }, {})
+
+          route.dynamicSegments.forEach((segment, index) => {
+            props[segment.name] = match[index + 1]
+          })
+        }
+        // else 已经在render函数中处理了, NotFound
+      })
+
+
+      return h('div', [
+        h(componentToRender || NotFound, { props }),
+        h('a', { attrs: { href: '#foo/123' } }, 'foo'),
+        h('a', { attrs: { href: '#foo/234' } }, 'foo'),
+        ' | ',
+        h('a', { attrs: { href: '#bar' } }, 'bar')
+      ])
+    }
+  })
 </script>

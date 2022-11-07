@@ -19,10 +19,49 @@
 <script>
 const validationPlugin = {
   // Implement this!
+  // 对于Vue插件, 我们需要install 方法
+  install(Vue) {
+    // 在全局的mixin中
+    Vue.mixin({
+      // 在computed数据形成之前
+      beforeCreate() {
+        const rules = this.$options.validations
+        if (rules) {
+          // Object.assign(target, source1, source2, ...)
+          this.$options.computed =
+            Object.assign ({}, this.$options.computed, {
+              $v () {
+                let valid = true
+                const errors = []
+
+                // 遍历校验的规则
+                Object.keys(rules).forEach(key => {
+                  const rule = rules[key]
+                  const value = this[key]
+                  const result  = rule.validate(value)
+                  if (!result) {
+                    valid =false
+                    errors.push(rule.message(key, value))
+                  }
+                })
+
+                // map current states to this valid or errors
+                // so, we need to check the data
+                return {
+                  valid,
+                  errors
+                }
+              }
+            })
+        }
+      }
+    })
+  }
 }
 
 Vue.use(validationPlugin)
 
+const emailRe = /^([A-Za-z0-9_\-\.\u4e00-\u9fa5])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,8})$/
 new Vue({
   el: '#app',
   data: {
@@ -35,7 +74,7 @@ new Vue({
       message: (key, value) => `${key} should have a min length of 5, but got ${value.length}`
     },
     email: {
-      validate: value => /email/.test(value),
+      validate: value => emailRe.test(value),
       message: key => `${key} must be a valid email`
     }
   },

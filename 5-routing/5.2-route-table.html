@@ -39,6 +39,11 @@
       params: { username: '123' },
       query: { foo: 'bar' }
     }
+
+    而如果我们需要实现上面的“识别”, 我们需要一个解析器来解析url
+    figure out url中的dynamic segments, 然后需要分析how to match
+    this incoming raw path to the patent and extract this username.
+    我们需要一个转换器来利用正则表达式去转换，以及在运行时进行解析
   */
 
   const app = new Vue({
