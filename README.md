@@ -1,67 +1,21 @@
 # Vue Advanced Workshop
+(Vue的相关源码Notes 结合了自己的理解并加以注释)
 
 This is the companion repository to the Vue Advanced Workshop.
 
-## Prerequisites
+🚀Vue2的部分是取自 [frontendmasters](https://frontendmasters.com/courses/advanced-vue/) 的教程中内容。
+
+
+
+🪂Vue3的部分是取自 [Vue-Mastery](https://www.vuemastery.com/courses/vue3-deep-dive-with-evan-you/vue3-overview) 教程中的内容。
+
+## Prerequisites (准备工作)
 
 - [Git](https://git-scm.com/)
 - [Node.js](https://nodejs.org/en/) version 6+
 
-## Setup
+## Vue2源码仓库
+https://github.com/vuejs/vue
 
-1. Clone this repo:
-
-  ``` bash
-  git clone https://github.com/yyx990803/vue-advanced-workshop.git
-  ```
-
-2. Install dependencies (for automated tests):
-
-  ``` bash
-  cd vue-advanced-workshop
-  npm install
-  ```
-
-## Usage
-
-### Switching Between Work and Solution Branches
-
-This repo contains two branches: the `master` branch is where you will be working on the exercises, and the `solutions` branch contains the full solutions to each exercise.
-
-To jump to the `solutions` branch, use the following git command:
-
-``` bash
-git checkout solutions
-```
-
-To go back to the working branch:
-
-``` bash
-git checkout master
-```
-
-### Saving Your Work
-
-As you work on the exercise, you will leave un-commited changes to the repo. Make sure to commit your changes before switching branches:
-
-``` bash
-git add -A
-git commit -m 'working on exercise 1.1'
-git checkout solutions
-```
-
-After viewing the hints from the `solutions` branch, you can then go back to the `master` branch to continue the exercise.
-
-### Automated Tests
-
-For each exercise there will be an automated test case to check if your implementation meets the requirements. To run the test for a given exercise (e.g. 1.1), run:
-
-``` bash
-npm test -- -t 1.1
-```
-
-You can also run the test in watch mode (which automatically re-runs the tests as you edit the files) with:
-
-``` bash
-npm run watch
-```
+## Vue3源码仓库
+https://github.com/vuejs/core
