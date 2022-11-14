@@ -1,0 +1,120 @@
+<script>
+  let activeEffect // the global argument
+
+  class Dep {
+    subscribers = new Set()
+
+    get value() {
+      this.depend()
+      return this._value
+    }
+
+    set value(newValue) {
+      this._value = newValue
+      this.notify()
+    }
+
+    depend() {
+      if (activeEffect) {
+        // then we track it
+        this.subscribers.add(activeEffect)
+      }
+    }
+
+    notify() {
+      this.subscribers.forEach(effect => {
+        effect()
+      })
+    }
+  }
+
+  function watchEffect(effect) {
+    activeEffect = effect
+
+    // here, we assume the effect function is one synchronous operation,
+    // so it doesn't really make sense for you to do anything asynchronous outside this
+    effect()
+    activeEffect = null
+  }
+
+  /* 
+    First of all, 'target' is always an object,
+    a weakMap can only use object as keys, and the nice thing
+    about weakMap is if this target object itself becomes no
+    longer accessible from any code, which means this target can be 
+    GC collected, then its associated value entry in the weakMap will
+    also be GC collected.
+  
+  */
+  const targetMap = new WeakMap()
+
+  function getDep(target, key) {
+    // how can we always locate the same deps instance
+    // so we will store them in a global map
+    let depsMap = targetMap.get(target)
+    if (!depsMap) {
+      // contains all the deps associated to that object.
+      depsMap = new Map()
+      targetMap.set(target, depsMap)
+    }
+    let dep = depsMap.get(key)
+    if (!dep) {
+      dep = new Dep()
+      depsMap.set(key, dep)
+    }
+
+    return dep
+  }
+
+
+  const reactiveHandlers = {
+    get(target, key, receiver) {
+      const dep = getDep(target, key)
+      dep.depend()
+      return Reflect.get(target, key, receiver)
+    },
+    set(target, key, value, receiver) {
+      const dep = getDep(target, key)
+      const result = Reflect.set(target, key, value,receiver)
+      dep.notify()
+      // needs to return a Boolean to indicate whether this operation has succeeded or not
+      return result
+    },
+
+    has() {
+
+    },
+
+    ownKeys() {
+      
+    }
+  }
+
+  function reactive(raw) {
+    return new Proxy(raw, reactiveHandlers)
+  }
+
+  /* 
+    为什么使用基于Proxy代理的实现，可以检测到新添加的属性？
+    因为reactivity is on the object, not on the object properties.
+    即使这个属性原本不存在，仍然能够让该属性触发get和set陷阱
+  */
+  const state = reactive({
+    count: 0
+  })
+
+  watchEffect(() => {
+
+    // trigger has trap
+    // console.log('msg' in state)
+
+    // trigger ownKey trap
+    // Object.keys(state)
+
+
+    console.log(state.msg)
+  }) // 0
+
+  state.count++
+
+</script>

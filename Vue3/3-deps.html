@@ -1,0 +1,63 @@
+<script>
+  let activeEffect // the global argument
+
+  class Dep {
+    constructor(value) {
+      this.subscribers = new Set()
+      this._value = value
+    }
+    
+    get value() {
+      this.depend()
+      return this._value
+    }
+
+    set value(newValue) {
+      this._value = newValue
+      this.notify()
+    }
+
+    depend() {
+      if (activeEffect) {
+        // then we track it
+        this.subscribers.add(activeEffect)
+      }
+    }
+
+    notify() {
+      this.subscribers.forEach(effect => {
+        effect()
+      })
+    }
+  }
+
+  function watchEffect(effect) {
+    activeEffect = effect
+
+    // here, we assume the effect function is one synchronous operation,
+    // so it doesn't really make sense for you to do anything asynchronous outside this
+    effect()
+    activeEffect = null
+  }
+
+  // const dep = new Dep('hello')
+  const ok = new Dep(true)
+  const msg = new Dep('hello')
+
+  watchEffect(() => {
+    // dep.depend()
+    if(ok.value) {
+      console.log(msg.value)
+    }
+    else {
+      console.log("false branch")
+    }
+
+  }) // effect run
+
+  // dep.value = 'changed'
+  msg.value = 'changed'
+  // dep.notify() // effect run
+
+
+</script>

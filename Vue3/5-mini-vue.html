@@ -1,0 +1,291 @@
+<div id="app"></div>
+
+
+<script>
+  // vdom
+  function h(tag, props, children) {
+    return {
+      tag,
+      props,
+      children
+    }
+  }
+
+  /*
+    The container is just the DOM elements
+    that we can put staff inside.
+
+    When we mount a virtual DOM tree, we're
+    creating the corresponding real DOM nodes
+    for the virtual DOM tree.
+  */
+  function mount(vnode, container) {
+    // create a actual DOM node
+    /*
+      we're storing the corresponding real DOM element,
+      back on to the vnode itself 
+    */
+    const el = vnode.el = document.createElement(vnode.tag)
+    // props
+    if (vnode.props) {
+      for (const key in vnode.props) {
+        const value = vnode.props[key]
+        /* 
+          In the actual implementation, we have to
+          account for a number of things, check whether it
+          should be set as property or an attribute or
+          whether it is an event listener.
+          But here, for the sake of simplicity,
+          we will just assume everything is an attribute.
+        */
+
+        // eventListener
+        if (key.startsWith('on')) {
+          el.addEventListener(key.slice(2).toLowerCase(), value)
+        }
+        else {
+          el.setAttribute(key, value)
+        }
+
+        // todo
+      }
+    }
+
+    // children
+    if (vnode.children) {
+      if (typeof vnode.children == 'string') {
+        el.textContent = vnode.children
+      }
+      else {
+        vnode.children.forEach(child => {
+          // recursion
+          mount(child, el)
+        });
+      }
+    }
+
+    container.appendChild(el)
+  }
+
+  //************ apply the mount function***************
+  // const vdom = h('div', { class: 'red' }, [
+  //   h('span', null, 'hello')
+  // ])
+
+  // mount(vdom, document.getElementById('app'))
+
+  // ***************************************************
+
+  // n1 represents the old vnode snapshot
+  // n2 represents the new vnode
+  function patch(n1, n2) {
+    // make sure they're the same type
+    if (n1.tag == n2.tag) {
+      /* 
+        we need to assign the "n1.el" to the new vnode "n2",
+        so that on future updates, when this new vnode "n2"
+        becomes the old vnode, we're essentially carrying the
+        same real DOM node over and over into future snapshots.
+      */
+      const el = n2.el = n1.el // get the old element cache
+
+      // props
+      const oldProps = n1.props || {}
+      const newProps = n2.props || {}
+
+      // diff these two objects
+      for (const key in newProps) {
+        const oldValue = oldProps[key]
+        const newValue = newProps[key]
+        if (newValue != oldValue) {
+          el.setAttribute(key, newValue)
+        }
+      }
+      /* 
+        it is possible for the old props,
+        but the key is no longer present in the new props,
+        so it got removed or a new one got added
+      */
+      for (const key in oldProps) {
+        if (!(key in newProps)) {
+          el.removeAttribute(key)
+        }
+      }
+
+      // children
+      const oldChildren = n1.children
+      const newChildren = n2.children
+
+      if (typeof newChildren == 'string') {
+        if (typeof oldChildren == 'string') {
+          if (newChildren !== oldChildren) {
+            el.textContent = newChildren
+          }
+        }
+        else {
+          el.textContent = newChildren
+        }
+      }
+      else {
+        if (typeof oldChildren == 'string') {
+          // discard the string
+          el.innerHTML = ''
+          newChildren.forEach(child => {
+            mount(child, el)
+          })
+        }
+        else {
+          // both oldChildren and newChildren are arrays
+          // commonLength, 也就是为了看公共的部分
+          const commonLength = Math.min(oldChildren.length, newChildren.length)
+          for (let i = 0; i < commonLength; ++i) {
+            patch(oldChildren[i], newChildren[i])
+          }
+          if (newChildren.length > oldChildren.length) {
+            newChildren.slice(oldChildren.length).forEach(child => {
+              mount(child, el)
+            })
+          }
+          else if (newChildren.length < oldChildren.length) {
+            oldChildren.slice(newChildren.length).forEach(child => {
+              el.removeChild(child.el)
+            })
+          }
+
+        }
+      }
+
+    }
+    else {
+      // replace
+
+    }
+  }
+
+
+  // reactivity
+  let activeEffect // the global argument
+
+  class Dep {
+    subscribers = new Set()
+
+    get value() {
+      this.depend()
+      return this._value
+    }
+
+    set value(newValue) {
+      this._value = newValue
+      this.notify()
+    }
+
+    depend() {
+      if (activeEffect) {
+        // then we track it
+        this.subscribers.add(activeEffect)
+      }
+    }
+
+    notify() {
+      this.subscribers.forEach(effect => {
+        effect()
+      })
+    }
+  }
+
+  function watchEffect(effect) {
+    activeEffect = effect
+
+    // here, we assume the effect function is one synchronous operation,
+    // so it doesn't really make sense for you to do anything asynchronous outside this
+    effect()
+    activeEffect = null
+  }
+
+  /* 
+    First of all, 'target' is always an object,
+    a weakMap can only use object as keys, and the nice thing
+    about weakMap is if this target object itself becomes no
+    longer accessible from any code, which means this target can be 
+    GC collected, then its associated value entry in the weakMap will
+    also be GC collected.
+  
+  */
+  const targetMap = new WeakMap()
+
+  function getDep(target, key) {
+    // how can we always locate the same deps instance
+    // so we will store them in a global map
+    let depsMap = targetMap.get(target)
+    if (!depsMap) {
+      // contains all the deps associated to that object.
+      depsMap = new Map()
+      targetMap.set(target, depsMap)
+    }
+    let dep = depsMap.get(key)
+    if (!dep) {
+      dep = new Dep()
+      depsMap.set(key, dep)
+    }
+
+    return dep
+  }
+
+
+  const reactiveHandlers = {
+    get(target, key, receiver) {
+      const dep = getDep(target, key)
+      dep.depend()
+      return Reflect.get(target, key, receiver)
+    },
+    set(target, key, value, receiver) {
+      const dep = getDep(target, key)
+      const result = Reflect.set(target, key, value, receiver)
+      dep.notify()
+      // needs to return a Boolean to indicate whether this operation has succeeded or not
+      return result
+    },
+    has() { },
+    ownKeys() { }
+  }
+
+  function reactive(raw) {
+    return new Proxy(raw, reactiveHandlers)
+  }
+
+
+  const App = {
+    data: reactive({
+      count: 0
+    }),
+
+    render() {
+      return h('div', {
+        onClick: () => {
+          this.data.count++
+        }
+      }, String(this.data.count))
+    }
+  }
+
+  function mountApp(component, container) {
+    let isMounted = false
+    let preVdom
+    // everything is inside of watchEffect
+    watchEffect(() => {
+      if (!isMounted) {
+        preVdom = component.render()
+        mount(preVdom, container)
+        isMounted = true
+      }
+      else {
+        const newVdom = component.render()
+        patch(preVdom, newVdom)
+        preVdom = newVdom
+      }
+    })
+  }
+
+
+  mountApp(App, document.getElementById('app'))
+</script>
