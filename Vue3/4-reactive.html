@@ -41,7 +41,7 @@
     First of all, 'target' is always an object,
     a weakMap can only use object as keys, and the nice thing
     about weakMap is if this target object itself becomes no
-    longer accessible from any code, which means this target can be 
+    longer accessible from any code, which means this target can be
     GC collected, then its associated value entry in the weakMap will
     also be GC collected.
   
@@ -75,26 +75,22 @@
     },
     set(target, key, value, receiver) {
       const dep = getDep(target, key)
-      const result = Reflect.set(target, key, value,receiver)
+      const result = Reflect.set(target, key, value, receiver)
       dep.notify()
       // needs to return a Boolean to indicate whether this operation has succeeded or not
       return result
     },
 
-    has() {
+    has() { },
 
-    },
-
-    ownKeys() {
-      
-    }
+    ownKeys() { }
   }
 
   function reactive(raw) {
     return new Proxy(raw, reactiveHandlers)
   }
 
-  /* 
+  /*
     为什么使用基于Proxy代理的实现，可以检测到新添加的属性？
     因为reactivity is on the object, not on the object properties.
     即使这个属性原本不存在，仍然能够让该属性触发get和set陷阱

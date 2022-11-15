@@ -6,7 +6,7 @@
       this.subscribers = new Set()
       this._value = value
     }
-    
+
     get value() {
       this.depend()
       return this._value

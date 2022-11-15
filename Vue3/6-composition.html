@@ -1,0 +1,100 @@
+<script>
+  // Composition API = Reactivity API + Lifestyle hooks
+  /* 
+    引入组件式API的一个很大好处在于：
+    * 提供了更好的机制用于代码组织和重用
+      我们可以随时提取组合式API的任何部分到函数中.
+    
+    Vue2的代码结构：为同一个功能服务的代码会被分到不同的选项中（data 与 method）的分离
+    而Vue3的代码结构： 我们可以去自行分组, 把一个共同的功能有关的放到一起。
+  */
+
+
+  import { reactive, ref, computed, watchEffect, watch, onMount } from 'vue'
+
+
+  // 我们还可以抽取出setup, 这样其他的组件也可以调用这个组件的setup函数
+  // 这样就能实现逻辑扩展
+  export function setup(props) {
+      const state = reactive({ count: 0 })
+
+      // watchEffect 不是懒惰式的(not lazy), 必须要预先收集依赖关系, 然后才会调用回调
+      // watchEffect(() => console.log(state.count))
+
+      // watchEffect可以去实现一系列组合的操作
+      // 下面这一段如果用Vue2去实现可能就会是method中写fetchData方法, data中存获取的值
+      const fetchData = ref(null)
+      watchEffect(() => {
+        fetch(`url${props.id}`).then(res => res.json()).then(data => {
+          fetchData.value = data
+        })
+      })
+
+      // this is how a component re-renders
+      watchEffect(() => {
+        const oldTree = component.vnode
+        const newTree = component.render.call(renderContext)
+        patch(oldTree, newTree)
+      })
+
+      const count = ref(0)
+      const plusOne = computed(() => state.count + 1)
+
+      // watch 默认是懒惰式的 (lazy), the callback will not be called immediately
+      watch([count, plusOne], ([count, plusOne], [oldCount, oldPlusOne]) => {
+
+      })
+
+      onMounted(() => console.log("mounted!"))
+
+
+      // 组合式代码结构
+      // feature A
+      const fooA = ref(0)
+      const plusOneA = computed(() => foo.value + 1)
+      function incrementFoo() { }
+      watchEffect(() => {
+
+      })
+
+
+      // 我们还可以将一个代码量很大的function 拆分成小的function, 放在export default上面
+      // 上面有feature B
+      const { fooB, plusOneB } = useFeatureB()
+
+      /* 
+        Template render context
+        Everything inside this object will be exposed to your templates,
+        so you can use your templates, so everything once returned to the
+        render context, all the refs will be automatically unwrapped.
+      */
+      return {
+        state,
+        increment: () => { state.count++ }
+      }
+    }
+
+  // 抽取出feature B函数
+  function useFeatureB() {
+    const fooB = ref(0)
+    const plusOneB = computed(() => foo.value + 1)
+    function incrementFoo() { }
+    watchEffect(() => {
+
+    })
+
+    return {
+      fooB,
+      plusOneB
+    }
+  }
+
+  export default {
+    // due to "count" is in 'Template render context', it doesn't need
+    // to write 'count.value'
+    template: `{{ count }}`,
+    props: ["id"],
+    setup
+  }
+
+</script>

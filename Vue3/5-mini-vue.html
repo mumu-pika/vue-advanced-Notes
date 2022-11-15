@@ -93,7 +93,7 @@
       const oldProps = n1.props || {}
       const newProps = n2.props || {}
 
-      // diff these two objects
+      // diff these two objects (分别遍历newProps和OldProps)
       for (const key in newProps) {
         const oldValue = oldProps[key]
         const newValue = newProps[key]

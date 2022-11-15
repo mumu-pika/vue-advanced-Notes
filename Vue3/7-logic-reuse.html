@@ -1,0 +1,146 @@
+<script src="https://unpkg.com/vue@next"></script>
+
+
+<div id="app">
+</div>
+
+
+<script>
+  const { createApp, onMounted, onUnmounted } = Vue
+
+  // 将setup之中的逻辑抽取, 去实现逻辑复用
+  function useMouse() {
+    const x = ref(0)
+    const y = ref(0)
+
+    const update = e => {
+      x.value = e.pageX
+      y.value = e.pageY
+    }
+
+    onMounted(() => {
+      window.addEventListener("mousemove", update)
+    })
+
+    onUnmounted(() => {
+      window.removeEventListener("mousemove", update)
+    })
+
+    return {
+      x, y
+    }
+  }
+
+  // 使用scoped slot
+  /* 
+    解决了两大问题：
+    1、命名空间冲突问题 （React的HOC也解决了）
+    2、注入不明的问题
+
+    这种方法的缺点在于：
+    为了逻辑提取和逻辑复用而创建了多个组件实例
+  */
+  const Mouse = {
+    data() {
+      return {
+        x: 0,
+        y: 0
+      }
+    },
+
+    methods: {
+      update(e) {
+        this.x = e.pageX
+        this.y = e.pageY
+      }
+    },
+
+    mounted() {
+      window.addEventListener('mousemove', this.update)
+    },
+
+    unmounted() {
+      window.removeEventListener('mousedown', this.update)
+    },
+    // 下面的render等价于下面这段template
+    // template: `<slot :x="x" :y="y" />`
+
+    render() {
+      return this.$slots.default && this.$slots.default({
+        x: this.x,
+        y: this.y
+      })
+    }
+  }
+
+
+  // 使用mixin来进行逻辑复用(logic reuse)
+  const MouseMixin = {
+    data() {
+      return {
+        x: 0,
+        y: 0
+      }
+    },
+
+    methods: {
+      update(e) {
+        this.x = e.pageX
+        this.y = e.pageY
+      }
+    },
+
+    mounted() {
+      window.addEventListener('mousemove', this.update)
+    },
+
+    unmounted() {
+      window.removeEventListener('mousedown', this.update)
+    }
+  }
+
+  /* 
+   mixin的2个主要问题
+    * 注入不明
+      如果mixins中的其他mixin的名字比较复杂或是
+      mixins中很多个mixin, 每次注入不同的名字, 那么时间一长,
+      就会搞不清属性对应的是哪个mixin所注入的。
+
+    * 命令冲突
+      此外, 每当我们提取提取出一个mixin的时候, 就不得不担心
+      命名空间的冲突(namespace collisions), 而用函数进行组合就不会有
+      这个问题, 天然的闭包环境。
+
+    解决：
+    * React的解决是去除了mixin, 使用了高阶组件HOC(higher-order-components),
+      也就是使用一个包装器组件
+
+  */
+  // const App = {
+  //   mixins: [MouseMixin, AnotherMixin],
+  //   template: `{{x}},  {{y}}`,
+  // }
+
+
+  // 使用scoped-slot之后
+  // const App = {
+  //   components: { Mouse },
+  //   template: `<Mouse v-slot="{x, y}">{{x}} {{y}}</Mouse>`
+  // }
+
+
+  // 使用setup之后
+  const App = {
+    template: `{{ x }} {{ y }}`,
+    setup() {
+      const { x, y } = useMouse()
+      // 为了解决命名冲突, 我们可以给x起别名
+      const { x: z } = useOtherFeature()
+      return { x, y }
+    }
+  }
+
+
+  createApp(App).mount('#app')
+
+</script>
